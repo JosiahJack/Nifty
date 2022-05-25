@@ -13,16 +13,13 @@ public class FGDEntityDump : MonoBehaviour {
 	private List<string> entityReferences;
 	private int currentline;
 
-    public string FGDEntityDumpAction()  {
-		StringBuilder outputLogs = new StringBuilder();
-		outputLogs.Append("Dumping all FGD entity references...");
-		Debug.Log("Dumping all FGD entity references...");
-
+    public void FGDEntityDumpAction()  {
+		Log.a.WriteToLog("Dumping all FGD entity references...");
 		entityReferences = new List<string>();
 		int trimdex = 0;
 		int trimdexEqualSign = 0;
 		int lastGoodCharIndex = 0;
-        StreamReader dataReader = new StreamReader(Nifty.a.fgdFolderPath);
+        StreamReader dataReader = new StreamReader(Nifty.a.fgdFilePath);
 		currentline = 1;
 		string s1 = "";
 		string s2 = "";
@@ -76,13 +73,6 @@ public class FGDEntityDump : MonoBehaviour {
 			}
 		}
 
-		outputLogs.AppendLine();
-		outputLogs.Append("Found " + entityReferences.Count.ToString() + " entities.");
-		Debug.Log("Found " + entityReferences.Count.ToString() + " entities.");
-
-		return outputLogs.ToString();
-		// #if UNITY_EDITOR_WIN
-			// UnityEditor.EditorApplication.isPlaying = false;
-		// #endif
+		Log.a.WriteToLog("Found " + entityReferences.Count.ToString() + " entities.");
     }
 }

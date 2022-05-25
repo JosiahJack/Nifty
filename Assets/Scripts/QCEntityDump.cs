@@ -18,11 +18,8 @@ public class QCEntityDump : MonoBehaviour {
 	private int currentLine;
 	public Toggle useTags;
 
-	public string QCFindEntitiesForList() {
-		StringBuilder outputLogs = new StringBuilder();
-		outputLogs.Append("Finding all entities in .qc files...");
-		Debug.Log("Finding all entities in .qc files...");
-
+	public void QCFindEntitiesForList() {
+		Log.a.WriteToLog("Finding all entities in .qc files...");
 		functionReferences = new List<string>();
 		entityReferences = new List<string>();
 		string s, args;
@@ -33,15 +30,17 @@ public class QCEntityDump : MonoBehaviour {
 		int argind = 0;
 		int foundents = 0;
 		bool foundparenth = false;
-
-		for (int i=0;i<Nifty.a.qcFileNames.Length;i++) {
-			List<QCFunction> lst = new List<QCFunction>();;
-			lst = QCFunctionParser.ParseQCFunctions(Nifty.a.qcFileNames[i]);
+		FileData.a.PopulateFileNames();
+		for (int i=0;i<FileData.a.qcFileNames.Length;i++) {
+			List<QCFunction_struct> lst = new List<QCFunction_struct>();;
+			lst = QCFunctionParser.ParseQCFunctions(FileData.a.qcFileNames[i]);
 			count = lst.Count;
 			foundents = 0;
 			for (int j=0;j<count;j++) {
 				s = lst[j].functionName;
-				if (s.Contains(voidstring) && (!Regex.IsMatch(s,"[A-Z]") || s.Contains("item_armorInv")) && !s.Contains("main") && !s.Contains("worldspawn")) {
+				if (s.Contains(voidstring) && (!Regex.IsMatch(s,"[A-Z]")
+					|| s.Contains("item_armorInv")) && !s.Contains("main")
+					&& !s.Contains("worldspawn")) {
 					if (!s.Contains("[") && !s.Contains("]")) {
 						textChars = s.ToCharArray();
 						index = argind = 0;
@@ -81,32 +80,35 @@ public class QCEntityDump : MonoBehaviour {
 								break;
 							}
 						}
-						if (foundparenth && index > 0 && index < s.Length) s = s.Remove(index,(s.Length - index));
+						if (foundparenth && index > 0 && index < s.Length) {
+							s = s.Remove(index,(s.Length - index));
+						}
 
 						s = s.Trim();
+						if (s.Contains("_use") || s.Contains("think")
+							|| s.Contains("touch") || s.Contains("ai_")
+							|| s.Contains("checkattack")) continue;
 
-						if (s.Contains("_use") || s.Contains("think") || s.Contains("touch") || s.Contains("ai_") || s.Contains("checkattack")) continue;
 						functionReferences.Add(s);
 						foundents++;
 					}
 				}
 			}
-			outputLogs.AppendLine();
-			outputLogs.Append(count.ToString() + " functions total and " + foundents.ToString() + " entities within " + Nifty.a.qcFileNames[i]);
-			Debug.Log(count.ToString() + " functions total and " + foundents.ToString() + " entities within " + Nifty.a.qcFileNames[i]);
+			Log.a.WriteToLog(count.ToString() + " functions total and "
+							 + foundents.ToString() + " entities within "
+							 + FileData.a.qcFileNames[i]);
 		}
-		outputLogs.AppendLine();
-		outputLogs.Append("Found " + functionReferences.Count.ToString() + " entities.");
-		Debug.Log("Found " + functionReferences.Count.ToString() + " entities.");
-		return outputLogs.ToString();
+		Log.a.WriteToLog("Found " + functionReferences.Count.ToString()
+						 + " entities.");
 	}
 
-    public string QCEntityDumpAction()  {
-		StringBuilder outputLogs = new StringBuilder();
-		outputLogs.Append("Dumping all entities in .qc files...");
-		Debug.Log("Dumping all entities in .qc files...");
+    public void QCEntityDumpAction()  {
+		Log.a.WriteToLog("Dumping all entities in .qc files...");
 
-		StreamWriter sw = new StreamWriter(Nifty.a.outputFolderPath + Nifty.a.outputFileName + "_all_functions.txt",false,Encoding.ASCII);
+		StreamWriter sw = new StreamWriter(Nifty.a.outputFolderPath
+										   + Nifty.a.outputFileName
+										   + "_all_functions.txt",
+										   false,Encoding.ASCII);
 		if (sw != null) {
 			using (sw) {
 				for (int k=0;k<functionReferences.Count;k++) {
@@ -115,14 +117,8 @@ public class QCEntityDump : MonoBehaviour {
 			}
 		}
 
-		outputLogs.AppendLine();
-		outputLogs.Append("Done! Found " + functionReferences.Count.ToString() + " entities.");
-		Debug.Log("Done! Found " + functionReferences.Count.ToString() + " entities.");
-
-		// #if UNITY_EDITOR_WIN
-			// UnityEditor.EditorApplication.isPlaying = false;
-		// #endif
-		return outputLogs.ToString();
+		Log.a.WriteToLog("Done! Found " + functionReferences.Count.ToString()
+						 + " entities.");
     }
 
 	long CountLinesReader(string fileNameAndPath) {

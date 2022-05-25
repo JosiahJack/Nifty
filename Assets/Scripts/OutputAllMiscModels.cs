@@ -9,8 +9,6 @@ using System.Linq;
 using System.Runtime.Serialization;
 
 public class OutputAllMiscModels : MonoBehaviour {
-	private string[] textFileNames;
-	private List<string> modelReferences;
 	private List<int> modelFrameCountReferences;
 	private List<int> modelSkinCountReferences;
 	private List<float> modelBoundsReferences;
@@ -25,26 +23,16 @@ public class OutputAllMiscModels : MonoBehaviour {
 	private float lastRadius;
 	public ImportMDL importer;
 
-    public string OutputAllMiscModelsAction()  {
-		StringBuilder outputLogs = new StringBuilder();
-		outputLogs.Append("Dumping all models into the mod folder into a .map...");
-		Debug.Log("Dumping all models into the mod folder into a .map...");
-
-		textFileNames = Directory.GetFiles(Nifty.a.modFolderPath,"*.mdl",System.IO.SearchOption.AllDirectories);
-		string s;
+    public void OutputAllMiscModelsAction()  {
+		Log.a.WriteToLog("Dumping all models into the mod folder into a .map...");
+		FileData.a.PopulateFileNames();
 		maxRadiusThisRow = 8f;
 		lastRadius = maxRadiusThisRow;
-		modelReferences = new List<string>();
 		modelFrameCountReferences = new List<int>();
 		modelSkinCountReferences = new List<int>();
 		modelBoundsReferences = new List<float>();
-		for (int i=0;i<textFileNames.Length;i++) {
-			s = textFileNames[i];
-			s = s.Remove(0,Nifty.a.modFolderPath.Length);
-			s = s.Insert(0,"progs/");
-			s = s.Replace("\\","/");
-			modelReferences.Add(s);
-			head = importer.ImportMDLFromFile(textFileNames[i]); // Expensive!
+		for (int i=0;i<FileData.a.mdlFileNames.Length;i++) {
+			head = importer.ImportMDLFromFile(FileData.a.mdlFileNames[i]); // Expensive!
 			modelFrameCountReferences.Add(head.num_frames);
 			modelSkinCountReferences.Add(head.num_skins);
 			modelBoundsReferences.Add(head.boundingradius);
@@ -78,13 +66,13 @@ public class OutputAllMiscModels : MonoBehaviour {
 				float y = -1f * (yWidth/2f);
 				float z = 0f;
 				float rad = maxRadiusThisRow;
-				for (int j=0;j<modelReferences.Count;j++) {
-					if (string.IsNullOrWhiteSpace(modelReferences[j])) continue;
+				for (int j=0;j<FileData.a.mdlMapEditorNames.Length;j++) {
+					if (string.IsNullOrWhiteSpace(FileData.a.mdlMapEditorNames[j])) continue;
 					sw.WriteLine("// entity " + (j+1).ToString());
 					sw.WriteLine("{");
 					sw.WriteLine("\"classname\" \"misc_model\"");
 					sw.WriteLine("\"origin\" \"" + x.ToString("N4") + " " + y.ToString("N4") + " " + z.ToString("N4") + "\"");
-					sw.WriteLine("\"mdl\" \"" + modelReferences[j] + "\"");
+					sw.WriteLine("\"mdl\" \"" + FileData.a.mdlMapEditorNames[j] + "\"");
 					if (modelSkinCountReferences[j] > 1) {
 						sw.WriteLine("\"pos2\" \"0 " + modelSkinCountReferences[j].ToString() + " -1\"");
 					}
@@ -114,13 +102,6 @@ public class OutputAllMiscModels : MonoBehaviour {
 				sw.Close();
 			}
 		}
-
-		outputLogs.AppendLine();
-		outputLogs.Append("Success!");
-		Debug.Log("Success!");
-		return outputLogs.ToString();
-		// #if UNITY_EDITOR_WIN
-			// UnityEditor.EditorApplication.isPlaying = false;
-		// #endif
+		Log.a.WriteToLog("Success!");
     }
 }

@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Text;
 using System.IO;
 using System.Collections;
@@ -8,20 +9,16 @@ using System;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
-using UnityEngine.UI;
 
 public class Nifty : MonoBehaviour {
 	public string modFolderPath;
-	public string qcFolderPath;
-	public string[] qcFileNames;
-	public string fgdFolderPath;
+	public string fgdFilePath;
 	public string outputFolderPath;
 	public string outputFileName = "nifty_output";
-	public string logFileName = "nifty_log.txt";
+	public string logFilePath = "nifty_log.txt";
 	public InputField tinputModPath;
 	public InputField tinputOutputPath;
 	public InputField tinputOutputFilename;
-	public InputField tinputQCPath;
 	public InputField tinputFGDPath;
 	public InputField tinputLogPath;
 	private QCEntityDump qcentRef;
@@ -29,7 +26,10 @@ public class Nifty : MonoBehaviour {
 	private FGDEntityDump fgdentRef;
 	private OutputAllMiscModels outputmodelsRef;
 	private DocQC docQC;
-	public Text logtext;
+	public bool onLinux;
+	public bool onWindows;
+	public bool onMac;
+	public bool useUnixPaths;
 
 	public static Nifty a;
 
@@ -41,163 +41,184 @@ public class Nifty : MonoBehaviour {
 		a.docQC = GetComponent<DocQC>();
 		a.outputmodelsRef = GetComponent<OutputAllMiscModels>();
 		a.ReadLastUserSettingsFromFile();
+		OperatingSystem os = Environment.OSVersion;
+		PlatformID pid = os.Platform;
+		a.onWindows = a.onLinux = a.onMac = a.useUnixPaths = false;
+		if (pid == PlatformID.Win32NT || pid == PlatformID.Win32S
+			|| pid == PlatformID.Win32Windows || pid == PlatformID.WinCE) {
+			a.onWindows = true; // Ironically, the odd duck here.
+		} else if (pid == PlatformID.Unix) {
+			a.onLinux = a.useUnixPaths = true;
+		} else if (pid == PlatformID.MacOSX) {
+			a.onMac = a.useUnixPaths = true;
+		}
+	}
+
+	// Add trailing slash.
+	// Example: C:/Program Files/QUAKE/mod
+	//          becomes
+	//          C:/Program Files/QUAKE/mod/
+	// This is necessary for adding subpaths.
+	public string FixSlashEnd(string str) {
+		if (!(str.EndsWith("/") || str.EndsWith("\\"))) str = str + "/";
+		return str;
+	}
+
+	// Add beginning slash for unix filesystems only (Linux, MAC, etc.).
+	// Example:  home/username/QUAKE/mod/
+	//           becomes:
+	//          /home/username/QUAKE/mod/
+	// This is necessary for Directory.GetFiles to use absolute pathing.
+	public string FixSlashBeginning(string str) {
+		if (!useUnixPaths) return str; // Don't change it for Windows.
+
+		if (str[0] != '/') str = "/" + str;
+		return str;
+	}
+
+	public string FixExtensionMissing(string str, string ext) {
+		string extCap = ext.ToUpper();
+		if (!str.EndsWith(ext) || !str.EndsWith(extCap)) str = str + ".fgd";
+		return str;
 	}
 
 	public void ModPathEntry() {
+		if (FileData.a == null) return; // Not yet initialized.
+
+		// Fix both ends for path that ends in folder.
+		tinputModPath.text = FixSlashEnd(tinputModPath.text);
+		tinputModPath.text = FixSlashBeginning(tinputModPath.text);
 		modFolderPath = tinputModPath.text;
+		FileData.a.initialized = false; // Flag it so that actions repopulate.
+		if (!string.IsNullOrWhiteSpace(modFolderPath)) {
+			FileData.a.PopulateFileNames();
+		}
 		WriteLastUserSettingsToFile();
 	}
 
 	public void OutputPathEntry() {
+		// Fix both ends for path that ends in folder.
+		tinputOutputPath.text = FixSlashEnd(tinputOutputPath.text);
+		tinputOutputPath.text = FixSlashBeginning(tinputOutputPath.text);
 		outputFolderPath = tinputOutputPath.text;
 		WriteLastUserSettingsToFile();
 	}
 
 	public void OutputFilenameEntry() {
+		// No fixing, this is a name with no path or filetype extension.
 		outputFileName = tinputOutputFilename.text;
 		WriteLastUserSettingsToFile();
 	}
 
-	public void QCPathEntry() {
-		qcFolderPath = tinputQCPath.text;
-		WriteLastUserSettingsToFile();
-		qcFileNames = Directory.GetFiles(qcFolderPath,"*.qc");
-	}
-
 	public void FGDPathEntry() {
-		fgdFolderPath = tinputFGDPath.text;
+		// Fix beginning only since this ends with the file name and extension.
+		tinputFGDPath.text = FixSlashBeginning(tinputFGDPath.text);
+		tinputFGDPath.text = FixExtensionMissing(tinputFGDPath.text,".fgd");
+		fgdFilePath = tinputFGDPath.text;
 		WriteLastUserSettingsToFile();
 	}
 
 	public void LogPathEntry() {
-		logFileName = tinputLogPath.text;
+		// Fix beginning only since this ends with the file name and extension.
+		tinputLogPath.text = FixSlashBeginning(tinputLogPath.text);
+		logFilePath = tinputLogPath.text;
 		WriteLastUserSettingsToFile();
 	}
 
-	public void ButtonModFilenameCheck() {
+	public void ButtonModFileCheck() {
 		if (!string.IsNullOrWhiteSpace(modFolderPath)) {
-			// string outputLogs = 
-			// logtext.text += outputLogs;
-			string outputLogs = "Error! Function to check file names does not exist yet.";
-			WriteToLog(outputLogs);
+			Log.a.WriteToLog("Error! Function does not exist yet.");
 		} else {
-			string outputLogs = "Error! Mod folder path not specified.";
-			WriteToLog(outputLogs);
+			Log.a.WriteToLog("Error! Mod folder path not specified.");
 		}
 	}
 
 	public void ButtonQCEntityDump() {
-		if (!string.IsNullOrWhiteSpace(qcFolderPath) && qcentRef != null) {
-			string outputLogs = qcentRef.QCFindEntitiesForList();
-			outputLogs += qcentRef.QCEntityDumpAction();
-			WriteToLog(outputLogs);
+		if (!string.IsNullOrWhiteSpace(modFolderPath) && qcentRef != null) {
+			qcentRef.QCFindEntitiesForList();
+			qcentRef.QCEntityDumpAction();
 		} else {
-			string outputLogs = "Error! QC folder path not specified.";
-			WriteToLog(outputLogs);
+			Log.a.WriteToLog("Error! QC folder path not specified.");
 		}
 	}
 
 	public void ButtonQCReferenceCheck() {
-		if (!string.IsNullOrWhiteSpace(qcFolderPath) && qcrefRef != null) {
-			string outputLogs = qcrefRef.QCReferenceCheckAction();
-			WriteToLog(outputLogs);
+		if (!string.IsNullOrWhiteSpace(modFolderPath) && qcrefRef != null) {
+			qcrefRef.QCReferenceCheckAction();
 		} else {
-			string outputLogs = "Error! Mod folder path not specified.";
-			WriteToLog(outputLogs);
+			Log.a.WriteToLog("Error! Mod folder path not specified.");
 		}
 	}
 
 	public void ButtonFGDEntityDump() {
 		if (!string.IsNullOrWhiteSpace(outputFolderPath) && fgdentRef != null) {
-			string outputLogs = fgdentRef.FGDEntityDumpAction();
-			WriteToLog(outputLogs);
+			fgdentRef.FGDEntityDumpAction();
 		} else {
-			string outputLogs = "Error! FGD folder path not specified.";
-			WriteToLog(outputLogs);
+			Log.a.WriteToLog("Error! FGD folder path not specified.");
 		}
 	}
 
 	public void ButtonDocQC() {
 		if (!string.IsNullOrWhiteSpace(outputFolderPath) && docQC != null) {
-			string outputLogs = docQC.DocQCAction();
-			WriteToLog(outputLogs);
+			docQC.DocQCAction();
 		} else {
-			string outputLogs = "Error! DocQC folder path not specified.";
-			WriteToLog(outputLogs);
+			Log.a.WriteToLog("Error! DocQC folder path not specified.");
 		}
 	}
 
 	public void ButtonOutputAllModelsToMap() {
-		if (!string.IsNullOrWhiteSpace(modFolderPath) && !string.IsNullOrWhiteSpace(outputFolderPath) && outputmodelsRef != null) {
-			string outputLogs = outputmodelsRef.OutputAllMiscModelsAction();
-			WriteToLog(outputLogs);
+		if (!string.IsNullOrWhiteSpace(modFolderPath)
+            && !string.IsNullOrWhiteSpace(outputFolderPath)
+            && outputmodelsRef != null) {
+			outputmodelsRef.OutputAllMiscModelsAction();
 		} else {
-			string outputLogs = "Error! Mod folder path not specified.";
-			WriteToLog(outputLogs);
+			Log.a.WriteToLog("Error! Mod folder path not specified.");
 		}
 	}
 
 	public void ButtonCompareQCtoFGDEntities() {
-		if (!string.IsNullOrWhiteSpace(qcFolderPath) && qcentRef != null) {
+		if (!string.IsNullOrWhiteSpace(modFolderPath) && qcentRef != null) {
 			qcentRef.QCFindEntitiesForList();
-			string outputLogs = "Done.";
-			WriteToLog(outputLogs);
+			Log.a.WriteToLog("Done.");
 		} else {
-			string outputLogs = "Error! QC folder path not specified.";
-			WriteToLog(outputLogs);
-		}
-	}
-
-	void WriteToLog(string entries) {
-		//if (entries.Length < 10000) logtext.text = entries;
-		//else logtext.text = "Text too large to display.  Logged to logfile.";
-		StreamWriter sw = new StreamWriter(logFileName,true,Encoding.ASCII);
-		if (sw != null) {
-			using (sw) {
-				sw.Write(entries);
-				sw.Close();
-			}
+			Log.a.WriteToLog("Error! QC folder path not specified.");
 		}
 	}
 
 	void WriteLastUserSettingsToFile() {
-		StreamWriter sw = new StreamWriter(Application.streamingAssetsPath + "/nifty_settings.dat",false,Encoding.ASCII);
-		if (sw != null) {
-			using (sw) {
-				sw.WriteLine(modFolderPath);
-				sw.WriteLine(qcFolderPath);
-				sw.WriteLine(fgdFolderPath);
-				sw.WriteLine(outputFolderPath);
-				sw.WriteLine(outputFileName);
-				sw.WriteLine(logFileName);
-				// OutputAllMiscModels xoffset
-				// OutputAllMiscModels yoffset
-				// OutputAllMiscModels xwidth
-				// OutputAllMiscModels ywidth
-				sw.Close();
-			}
+		StreamWriter sw = new StreamWriter(Application.streamingAssetsPath +
+						      "/nifty_settings.dat",false,Encoding.ASCII);
+		if (sw == null) return;
+
+		using (sw) {
+			sw.WriteLine(modFolderPath);
+			sw.WriteLine(fgdFilePath);
+			sw.WriteLine(outputFolderPath);
+			sw.WriteLine(outputFileName);
+			sw.WriteLine(logFilePath);
+			// OutputAllMiscModels xoffset
+			// OutputAllMiscModels yoffset
+			// OutputAllMiscModels xwidth
+			// OutputAllMiscModels ywidth
+			sw.Close();
 		}
 	}
 
 	void ReadLastUserSettingsFromFile() {
 		string readline; // variable to hold each string read in from the file
 		int currentline = 0;
-		StreamReader dataReader = new StreamReader(Application.streamingAssetsPath + "/nifty_settings.dat",Encoding.ASCII);
+		StreamReader dataReader = new StreamReader(Application.streamingAssetsPath
+									  + "/nifty_settings.dat",Encoding.ASCII);
 		if (dataReader != null) {
 			using (dataReader) {
 				do {
 					// Read the next line
 					readline = dataReader.ReadLine();
 					if (currentline == 0) modFolderPath = readline;
-					else if (currentline == 1) qcFolderPath = readline;
-					else if (currentline == 2) fgdFolderPath = readline;
-					else if (currentline == 3) outputFolderPath = readline;
-					else if (currentline == 4) outputFileName = readline;
-					else if (currentline == 5) logFileName = readline;
-					// else if (currentline == 6) modFolderPath = readline;
-					// else if (currentline == 7) modFolderPath = readline;
-					// else if (currentline == 8) modFolderPath = readline;
-					// else if (currentline == 9) modFolderPath = readline;
+					else if (currentline == 1) fgdFilePath = readline;
+					else if (currentline == 2) outputFolderPath = readline;
+					else if (currentline == 3) outputFileName = readline;
+					else if (currentline == 4) logFilePath = readline;
 					currentline++;
 				} while (!dataReader.EndOfStream);
 				dataReader.Close();
@@ -207,138 +228,10 @@ public class Nifty : MonoBehaviour {
 		tinputModPath.text = modFolderPath;
 		tinputOutputPath.text = outputFolderPath;
 		tinputOutputFilename.text = outputFileName;
-		tinputQCPath.text = qcFolderPath;
-		tinputFGDPath.text = fgdFolderPath;
-		tinputLogPath.text = logFileName;
-		if (!string.IsNullOrWhiteSpace(qcFolderPath))qcFileNames = Directory.GetFiles(qcFolderPath,"*.qc");
-	}
-}
-
-public struct QCFunction {
-    public string functionName;
-    public string content;
-    public string fullPath;
-	public string sourceFilename;
-    public int startLine;
-    public int endLine;
-	public QCFunctionParser.FunctionType functionType;
-}
-
-public static class QCFunctionParser {
-	public enum FunctionType {Function,Entity,Unknown};
-	private static string[] RemoveComment(IEnumerable<string> loc) {
-		string[] line = loc.ToArray();
-		bool startComment = false;
-		int startComPos=0;
-		int endComPos=-1;
-		int count = line.Length;
-		string comment;
-		bool mistakeComment;
-		int multiCommentStart, multiCommentEnd;
-		for(int i=0;i<count;i++) {
-			if (string.IsNullOrWhiteSpace(line[i])) continue;
-			// if (line[i].Contains("[ENTITY]")) functionTaggedAsEntity[i] = IsAnEntity;
-			// else if (line[i].Contains("[FUNCTION]")) functionTaggedAsEntity[i] = IsAFunction;
-			// else functionTaggedAsEntity[i] = IsUnknown;
-
-			if (line[i].Contains("//")) {
-				mistakeComment = false;
-				if(line[i].Contains("*//*")) { //Case mistake /**//**/ with //
-					if ((line[i].IndexOf("//") - line[i].IndexOf("*//*")) == 1) mistakeComment = true;
-				}
-
-				if(!mistakeComment) {
-					comment = line[i].Substring(line[i].IndexOf("//"));
-					line[i] = line[i].Replace(comment, string.Empty);
-				}
-			}
-			if(line[i].Contains("/*")) {
-				startComment = true;
-				startComPos = line[i].IndexOf("/*");
-				endComPos = -1;
-			} else {
-				startComPos = 0;
-			}
-
-			if (startComment) {
-				if(!string.IsNullOrEmpty(line[i])) {
-					if (line[i].Contains("*/")) {
-						startComment = false;
-						endComPos = line[i].IndexOf("*/", startComPos);
-					} else endComPos = -1;
-
-					if (endComPos == -1) {
-						comment = line[i].Substring(startComPos);
-						line[i] = line[i].Replace(comment, string.Empty);
-					} else {
-						comment = line[i].Substring(startComPos, endComPos - startComPos + 2);
-						line[i] = line[i].Replace(comment, string.Empty);
-					}
-				}
-			}
-
-			if (line[i].Contains("/*"))
-			while((multiCommentStart = line[i].IndexOf("/*")) >= 0 && (multiCommentEnd = line[i].IndexOf("*/")) >= 0 && multiCommentEnd > multiCommentStart) {
-				comment = line[i].Substring(multiCommentStart, multiCommentEnd - multiCommentStart + 2);
-				line[i] = line[i].Replace(comment, string.Empty);
-			}
+		tinputFGDPath.text = fgdFilePath;
+		tinputLogPath.text = logFilePath;
+		if (!string.IsNullOrWhiteSpace(modFolderPath)) {
+			FileData.a.PopulateFileNames();
 		}
-		return line;
-	}
-
-	public static List<QCFunction> ParseQCFunctions(string path) {
-		List<QCFunction> lstCppFunc = new List<QCFunction>();
-
-		IEnumerable<string> listOfFunctions = File.ReadLines(path, System.Text.Encoding.ASCII);
-		string[] listOfFunctionsNoComments = RemoveComment(listOfFunctions);
-		int level = 0;
-		QCFunction crtFunc = new QCFunction();
-		int lineCount = 0;
-		StringBuilder builder = new StringBuilder();
-		bool startName = false;
-		string builderToString;
-		string lastLine = "";
-		for (int i=0;i<listOfFunctionsNoComments.Length;i++) {
-			lineCount++; // start at 1 and increment thereafter
-			if (string.IsNullOrWhiteSpace(listOfFunctionsNoComments[i])) { lastLine = listOfFunctionsNoComments[i]; continue; }
-
-			if (level <= 0) {
-				if (listOfFunctionsNoComments[i].Contains('(')) {
-					if (listOfFunctionsNoComments[i].Trim().IndexOf('(') == 0) builder.Append(lastLine);
-					builder.AppendLine(listOfFunctionsNoComments[i]);
-					crtFunc.startLine = lineCount;
-					crtFunc.fullPath = path;
-					crtFunc.sourceFilename = Path.GetFileName(path);
-					startName = true;
-				}
-				if (startName) {
-					builderToString = builder.ToString();
-					if (listOfFunctionsNoComments[i] != builderToString.Replace("\r\n",string.Empty)) builder.AppendLine(listOfFunctionsNoComments[i]);
-					if (listOfFunctionsNoComments[i].Contains(')')) {
-						startName = false;
-						crtFunc.functionName = builder.ToString();
-						builder.Clear();
-					}
-				}
-			}
-
-			if(listOfFunctionsNoComments[i].Contains('{')) {
-				foreach(char c in listOfFunctionsNoComments[i]) {
-					if (c == '{') level++;
-				}
-			}
-			if(listOfFunctionsNoComments[i].Contains('}')) {
-				foreach (char c in listOfFunctionsNoComments[i]) {
-					if (c == '}') level--;
-				}
-				if (level <= 0) {
-					crtFunc.endLine = lineCount;
-					lstCppFunc.Add(crtFunc);
-					level = 0;
-				}
-			}
-			lastLine = listOfFunctionsNoComments[i];
-		}
-		return lstCppFunc;
 	}
 }

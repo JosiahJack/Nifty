@@ -18,13 +18,9 @@ public class DocQC : MonoBehaviour {
 	private int currentLine;
 	public Toggle useTags;
 
-	public string DocQCAction() {
-		StringBuilder outputLogs = new StringBuilder();
-		outputLogs.Append("Documenting all entities in .qc files...");
-		Debug.Log("Documenting all entities in .qc files...");
+	public void DocQCAction() {
+		Log.a.WriteToLog("Documenting all entities in .qc files...");
 
-		// Parse QC functions into a list of QCFunction data structs.
-
-		return outputLogs.ToString();
+		// Parse QC functions into a list of QCFunction_struct's.
 	}
 }
