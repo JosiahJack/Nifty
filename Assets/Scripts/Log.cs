@@ -36,6 +36,7 @@ public class Log : MonoBehaviour {
 		startedLogging = true;
 		using (sw) {
 			sw.Write(line);
+			sw.Write(Environment.NewLine);
 			sw.Close();
 		}
 	}

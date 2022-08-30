@@ -26,6 +26,7 @@ public class Nifty : MonoBehaviour {
 	private FGDEntityDump fgdentRef;
 	private OutputAllMiscModels outputmodelsRef;
 	private DocQC docQC;
+	private string lastFgdFilePath;
 	public bool onLinux;
 	public bool onWindows;
 	public bool onMac;
@@ -52,6 +53,7 @@ public class Nifty : MonoBehaviour {
 		} else if (pid == PlatformID.MacOSX) {
 			a.onMac = a.useUnixPaths = true;
 		}
+		a.lastFgdFilePath = "/home/qmaster/QUAKE/null.fgd";
 	}
 
 	// Add trailing slash.
@@ -60,6 +62,8 @@ public class Nifty : MonoBehaviour {
 	//          C:/Program Files/QUAKE/mod/
 	// This is necessary for adding subpaths.
 	public string FixSlashEnd(string str) {
+		if (string.IsNullOrWhiteSpace(str)) return str;
+
 		if (!(str.EndsWith("/") || str.EndsWith("\\"))) str = str + "/";
 		return str;
 	}
@@ -70,6 +74,7 @@ public class Nifty : MonoBehaviour {
 	//          /home/username/QUAKE/mod/
 	// This is necessary for Directory.GetFiles to use absolute pathing.
 	public string FixSlashBeginning(string str) {
+		if (string.IsNullOrWhiteSpace(str)) return str;
 		if (!useUnixPaths) return str; // Don't change it for Windows.
 
 		if (str[0] != '/') str = "/" + str;
@@ -77,22 +82,18 @@ public class Nifty : MonoBehaviour {
 	}
 
 	public string FixExtensionMissing(string str, string ext) {
+		if (string.IsNullOrWhiteSpace(str)) return str;
+
 		string extCap = ext.ToUpper();
-		if (!str.EndsWith(ext) || !str.EndsWith(extCap)) str = str + ".fgd";
+		if (!str.EndsWith(ext) && !str.EndsWith(extCap)) return (str + ext);
 		return str;
 	}
 
 	public void ModPathEntry() {
-		if (FileData.a == null) return; // Not yet initialized.
-
 		// Fix both ends for path that ends in folder.
 		tinputModPath.text = FixSlashEnd(tinputModPath.text);
 		tinputModPath.text = FixSlashBeginning(tinputModPath.text);
 		modFolderPath = tinputModPath.text;
-		FileData.a.initialized = false; // Flag it so that actions repopulate.
-		if (!string.IsNullOrWhiteSpace(modFolderPath)) {
-			FileData.a.PopulateFileNames();
-		}
 		WriteLastUserSettingsToFile();
 	}
 
@@ -111,11 +112,13 @@ public class Nifty : MonoBehaviour {
 	}
 
 	public void FGDPathEntry() {
+		if (string.IsNullOrWhiteSpace(tinputFGDPath.text)) return;
+
 		// Fix beginning only since this ends with the file name and extension.
-		tinputFGDPath.text = FixSlashBeginning(tinputFGDPath.text);
+		tinputFGDPath.text = FixSlashBeginning(tinputFGDPath.text); 		
 		tinputFGDPath.text = FixExtensionMissing(tinputFGDPath.text,".fgd");
 		fgdFilePath = tinputFGDPath.text;
-		WriteLastUserSettingsToFile();
+		if (tinputFGDPath.text != lastFgdFilePath) WriteLastUserSettingsToFile();
 	}
 
 	public void LogPathEntry() {
@@ -230,8 +233,5 @@ public class Nifty : MonoBehaviour {
 		tinputOutputFilename.text = outputFileName;
 		tinputFGDPath.text = fgdFilePath;
 		tinputLogPath.text = logFilePath;
-		if (!string.IsNullOrWhiteSpace(modFolderPath)) {
-			FileData.a.PopulateFileNames();
-		}
 	}
 }

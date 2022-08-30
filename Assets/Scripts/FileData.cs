@@ -16,14 +16,9 @@ public class FileData : MonoBehaviour {
     public string[] mdlFileNames;        // C:/QUAKE/mod/progs/model.mdl
     public string[] mdlMapEditorNames;   // progs/model.mdl
     public string[] sprFileNames;        // C:/QUAKE/mod/progs/sprite.spr
-    public string[] spr32FileNames;      // C:/QUAKE/mod/progs/sprite.spr32
-    public string[] wavFileNames;        // C:/QUAKE/mod/sound/sound.wav
-    private bool qcInitialized;
-    private bool mdlInitialized;
-    private bool sprInitialized;
-    private bool spr32Initialized;
-    private bool wavInitialized;
-    public bool initialized = false;
+    public string[] sprMapEditorNames;   // progs/sprite.spr
+    public string[] wavFileNames;        // C:/QUAKE/mod/sound/folder/sound.wav
+    public string[] wavMapEditorNames;   // folder/sound.wav
     private string lastUsedModdir;
     private string lastPWD;
 
@@ -31,60 +26,51 @@ public class FileData : MonoBehaviour {
 
     void Awake() {
         a = this;
-        a.qcInitialized = a.mdlInitialized = false;
-        a.sprInitialized = a.spr32Initialized = false;
-        a.wavInitialized = false;
-        a.initialized = false;
         a.lastUsedModdir = string.Empty;
     }
 
     public void PopulateFileNames() {
-        if (initialized) return;
+        mdlFileNames = Directory.GetFiles(Nifty.a.modFolderPath,"*.mdl",
+                            System.IO.SearchOption.AllDirectories);
+        mdlMapEditorNames = new string[mdlFileNames.Length];
+        for (int i=0;i<mdlFileNames.Length;i++) {
+            mdlFileNames[i] = mdlFileNames[i].Replace("\\","/");
+            mdlMapEditorNames[i] =
+                mdlFileNames[i].Remove(0,Nifty.a.modFolderPath.Length);
+        }
 
-        if (!mdlInitialized) {
-            mdlFileNames = Directory.GetFiles(Nifty.a.modFolderPath,"*.mdl",
-                                              System.IO.SearchOption.AllDirectories);
-            mdlMapEditorNames = new string[mdlFileNames.Length];
-            for (int i=0;i<mdlFileNames.Length;i++) {
-                mdlFileNames[i] = mdlFileNames[i].Replace("\\","/");
-                mdlMapEditorNames[i] =
-                    mdlFileNames[i].Remove(0,Nifty.a.modFolderPath.Length);
+        sprFileNames = Directory.GetFiles(Nifty.a.modFolderPath,"*.spr",
+                            System.IO.SearchOption.AllDirectories);
+        sprMapEditorNames = new string[sprFileNames.Length];
+        for (int i=0;i<sprFileNames.Length;i++) {
+            sprFileNames[i] = sprFileNames[i].Replace("\\","/");
+            sprMapEditorNames[i] =
+                sprFileNames[i].Remove(0,Nifty.a.modFolderPath.Length);
+        }
+
+        qcFileNames = Directory.GetFiles(Nifty.a.modFolderPath,"*.qc",
+                        System.IO.SearchOption.AllDirectories);
+        csqcFileNames = Directory.GetFiles(Nifty.a.modFolderPath,"*.csqc",
+                            System.IO.SearchOption.AllDirectories);
+        string[] srcFiles = Directory.GetFiles(Nifty.a.modFolderPath,
+                            "*.src",System.IO.SearchOption.AllDirectories);
+        progsSrcFileName = csprogsSrcFileName = string.Empty;
+        for (int i=0;i<srcFiles.Length; i++) {
+            if (srcFiles[i].Contains("progs.src")) {
+                progsSrcFileName = srcFiles[i];
+            } else if (srcFiles[i].Contains("csprogs.src")) {
+                csprogsSrcFileName = srcFiles[i];
             }
-            mdlInitialized = true;
         }
-        if (!sprInitialized) {
-            sprFileNames = Directory.GetFiles(Nifty.a.modFolderPath,"*.spr",
-                                              System.IO.SearchOption.AllDirectories);
-            sprInitialized = true;
+
+        wavFileNames = Directory.GetFiles(Nifty.a.modFolderPath,"*.wav",
+                            System.IO.SearchOption.AllDirectories);
+        wavMapEditorNames = new string[wavFileNames.Length];
+        for (int i=0;i<wavFileNames.Length;i++) {
+            wavFileNames[i] = wavFileNames[i].Replace("\\","/");
+            // Remove the path and 6 more for 'sound'.
+            wavMapEditorNames[i] =
+                wavFileNames[i].Remove(0,Nifty.a.modFolderPath.Length + 6);
         }
-        if (!spr32Initialized) { 
-            spr32FileNames = Directory.GetFiles(Nifty.a.modFolderPath,"*.spr32",
-                                                System.IO.SearchOption.AllDirectories);
-            spr32Initialized = true;
-        }
-        if (!qcInitialized) {
-            qcFileNames = Directory.GetFiles(Nifty.a.modFolderPath,"*.qc",
-                                             System.IO.SearchOption.AllDirectories);
-            csqcFileNames = Directory.GetFiles(Nifty.a.modFolderPath,"*.csqc",
-                                               System.IO.SearchOption.AllDirectories);
-            string[] srcFiles = Directory.GetFiles(Nifty.a.modFolderPath,"*.src",
-                                                   System.IO.SearchOption.AllDirectories);
-            progsSrcFileName = csprogsSrcFileName = string.Empty;
-            for (int i=0;i<srcFiles.Length; i++) {
-                if (srcFiles[i].Contains("progs.src")) {
-                    progsSrcFileName = srcFiles[i];
-                } else if (srcFiles[i].Contains("csprogs.src")) {
-                    csprogsSrcFileName = srcFiles[i];
-                }
-            }
-            qcInitialized = true;
-        }
-        if (!wavInitialized) { 
-            wavFileNames = Directory.GetFiles(Nifty.a.modFolderPath,"*.wav",
-                                              System.IO.SearchOption.AllDirectories);
-            wavInitialized = true;
-        }
-        initialized = qcInitialized && mdlInitialized && sprInitialized
-                      && spr32Initialized && wavInitialized;
     }
 }

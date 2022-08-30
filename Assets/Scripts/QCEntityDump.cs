@@ -38,6 +38,8 @@ public class QCEntityDump : MonoBehaviour {
 			foundents = 0;
 			for (int j=0;j<count;j++) {
 				s = lst[j].functionName;
+				if (s == null) continue;
+
 				if (s.Contains(voidstring) && (!Regex.IsMatch(s,"[A-Z]")
 					|| s.Contains("item_armorInv")) && !s.Contains("main")
 					&& !s.Contains("worldspawn")) {
@@ -87,6 +89,8 @@ public class QCEntityDump : MonoBehaviour {
 						s = s.Trim();
 						if (s.Contains("_use") || s.Contains("think")
 							|| s.Contains("touch") || s.Contains("ai_")
+							|| s.Contains("th_") || s.Contains("SUB_")
+							|| s.Contains("BDW_")
 							|| s.Contains("checkattack")) continue;
 
 						functionReferences.Add(s);

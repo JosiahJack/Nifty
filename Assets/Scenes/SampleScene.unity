@@ -680,9 +680,9 @@ RectTransform:
   m_Father: {fileID: 1999739042}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 242.00003, y: 1.2400818}
+  m_AnchorMin: {x: 0, y: 0.5}
+  m_AnchorMax: {x: 0, y: 0.5}
+  m_AnchoredPosition: {x: 522, y: 1.2400818}
   m_SizeDelta: {x: 1000, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &76267819
@@ -3545,9 +3545,6 @@ MonoBehaviour:
   onWindows: 0
   onMac: 0
   useUnixPaths: 0
-  Output1ContentContainer: {fileID: 1229433171}
-  overwriteLogEachSession: 0
-  overwriteLogToggle: {fileID: 1264471336}
 --- !u!114 &912844910
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5656,7 +5653,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -15, y: -0.5}
+  m_AnchoredPosition: {x: -14.997681, y: -0.5}
   m_SizeDelta: {x: 10.000037, y: -13}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1508103264
