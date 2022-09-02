@@ -11,8 +11,8 @@ using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 
 public class QCEntityDump : MonoBehaviour {
-	private List<string> functionReferences;
-	private List<string> entityReferences;
+	[HideInInspector] public List<string> functionReferences;
+	[HideInInspector] public List<string> entityReferences;
 	private StreamReader dataReader;
 	private string readLine;
 	private int currentLine;
@@ -32,16 +32,22 @@ public class QCEntityDump : MonoBehaviour {
 		bool foundparenth = false;
 		FileData.a.PopulateFileNames();
 		for (int i=0;i<FileData.a.qcFileNames.Length;i++) {
-			List<QCFunction_struct> lst = new List<QCFunction_struct>();;
-			lst = QCFunctionParser.ParseQCFunctions(FileData.a.qcFileNames[i]);
+			List<QCFunction_struct> lst = new List<QCFunction_struct>();
+			lst = Nifty.a.qcFuncParserRef.ParseQCFunctions(FileData.a.qcFileNames[i]);
 			count = lst.Count;
 			foundents = 0;
 			for (int j=0;j<count;j++) {
 				s = lst[j].functionName;
 				if (s == null) continue;
+				if (s.Contains("dcrossbow_checkmelee")) Debug.Log("dcrossbow_checkmelee: " + (lst[j].functionType).ToString());
+				if (lst[j].functionType == 
+					QCFunctionParser.FunctionType.Function) continue;
 
 				if (s.Contains(voidstring) && (!Regex.IsMatch(s,"[A-Z]")
-					|| s.Contains("item_armorInv")) && !s.Contains("main")
+					|| s.Contains("item_armorInv")
+					|| lst[j].functionType == 
+					     QCFunctionParser.FunctionType.Entity)
+					&& !s.Contains("main")
 					&& !s.Contains("worldspawn")) {
 					if (!s.Contains("[") && !s.Contains("]")) {
 						textChars = s.ToCharArray();
@@ -87,41 +93,28 @@ public class QCEntityDump : MonoBehaviour {
 						}
 
 						s = s.Trim();
-						if (s.Contains("_use") || s.Contains("think")
+						if ((s.Contains("_use") || s.Contains("think")
 							|| s.Contains("touch") || s.Contains("ai_")
 							|| s.Contains("th_") || s.Contains("SUB_")
 							|| s.Contains("BDW_")
-							|| s.Contains("checkattack")) continue;
-
-						functionReferences.Add(s);
+							|| s.Contains("checkattack"))
+							&& (lst[j].functionType != 
+							QCFunctionParser.FunctionType.Entity)) continue;
+						
+						entityReferences.Add(s);
 						foundents++;
 					}
 				}
 			}
-			Log.a.WriteToLog(count.ToString() + " functions total and "
-							 + foundents.ToString() + " entities within "
-							 + FileData.a.qcFileNames[i]);
 		}
-		Log.a.WriteToLog("Found " + functionReferences.Count.ToString()
-						 + " entities.");
 	}
 
     public void QCEntityDumpAction()  {
 		Log.a.WriteToLog("Dumping all entities in .qc files...");
-
-		StreamWriter sw = new StreamWriter(Nifty.a.outputFolderPath
-										   + Nifty.a.outputFileName
-										   + "_all_functions.txt",
-										   false,Encoding.ASCII);
-		if (sw != null) {
-			using (sw) {
-				for (int k=0;k<functionReferences.Count;k++) {
-					sw.WriteLine(functionReferences[k]);
-				}
-			}
+		for (int k=0;k<entityReferences.Count;k++) {
+			Log.a.WriteToLog(entityReferences[k]);
 		}
-
-		Log.a.WriteToLog("Done! Found " + functionReferences.Count.ToString()
+		Log.a.WriteToLog("Done! Found " + entityReferences.Count.ToString()
 						 + " entities.");
     }
 

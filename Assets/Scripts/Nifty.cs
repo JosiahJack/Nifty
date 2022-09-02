@@ -22,6 +22,7 @@ public class Nifty : MonoBehaviour {
 	public InputField tinputFGDPath;
 	public InputField tinputLogPath;
 	private QCEntityDump qcentRef;
+	public QCFunctionParser qcFuncParserRef;
 	private QCReferenceCheck qcrefRef;
 	private FGDEntityDump fgdentRef;
 	private OutputAllMiscModels outputmodelsRef;
@@ -39,6 +40,7 @@ public class Nifty : MonoBehaviour {
 		a.qcentRef = GetComponent<QCEntityDump>();
 		a.qcrefRef = GetComponent<QCReferenceCheck>();
 		a.fgdentRef = GetComponent<FGDEntityDump>();
+		a.qcFuncParserRef = GetComponent<QCFunctionParser>();
 		a.docQC = GetComponent<DocQC>();
 		a.outputmodelsRef = GetComponent<OutputAllMiscModels>();
 		a.ReadLastUserSettingsFromFile();
@@ -155,6 +157,7 @@ public class Nifty : MonoBehaviour {
 
 	public void ButtonFGDEntityDump() {
 		if (!string.IsNullOrWhiteSpace(outputFolderPath) && fgdentRef != null) {
+			fgdentRef.FGDFindEntitiesForList();
 			fgdentRef.FGDEntityDumpAction();
 		} else {
 			Log.a.WriteToLog("Error! FGD folder path not specified.");
@@ -181,8 +184,11 @@ public class Nifty : MonoBehaviour {
 
 	public void ButtonCompareQCtoFGDEntities() {
 		if (!string.IsNullOrWhiteSpace(modFolderPath) && qcentRef != null) {
+			Log.a.WriteToLog("Comparing .fgd entities to .qc entities...");
+			fgdentRef.FGDFindEntitiesForList();
 			qcentRef.QCFindEntitiesForList();
-			Log.a.WriteToLog("Done.");
+			CompareFGDToQcEntities();
+			Log.a.WriteToLog("Done.  Comparison complete.");
 		} else {
 			Log.a.WriteToLog("Error! QC folder path not specified.");
 		}
@@ -233,5 +239,53 @@ public class Nifty : MonoBehaviour {
 		tinputOutputFilename.text = outputFileName;
 		tinputFGDPath.text = fgdFilePath;
 		tinputLogPath.text = logFilePath;
+	}
+
+	private void CompareFGDToQcEntities() {
+		int i, j, missingEntitiesInQC, missingEntitiesInFGD;
+		missingEntitiesInQC = missingEntitiesInFGD = 0;
+		for (i = 0; i < qcentRef.entityReferences.Count; i++) {
+			bool foundMatch = false;
+			for (j = 0; j < fgdentRef.entityReferences.Count; j++) {
+				if (fgdentRef.entityReferences[i] == qcentRef.entityReferences[j]) {
+					foundMatch = true;
+				}
+			}
+			if (!foundMatch) {
+				Log.a.WriteToLog("Could not find qc entity `" 
+								 + qcentRef.entityReferences[i] + "` in fgd");
+				missingEntitiesInFGD++;
+			}
+		}
+
+		for (i = 0; i < fgdentRef.entityReferences.Count; i++) {
+			bool foundMatch = false;
+			for (j = 0; j < qcentRef.entityReferences.Count; j++) {
+				if (fgdentRef.entityReferences[i] == qcentRef.entityReferences[j]) {
+					foundMatch = true;
+				}
+			}
+			if (!foundMatch) {
+				Log.a.WriteToLog("Could not find fgd entity `" 
+								 + qcentRef.entityReferences[i]
+                                 + "` in qc files");
+				missingEntitiesInQC++;
+			}
+		}
+		string message = "Comparison results: ";
+		if (missingEntitiesInFGD > 0) {
+			message = message + " ...Missing " + missingEntitiesInFGD
+                      + " entities in the .fgd file";
+		}
+
+		if (missingEntitiesInQC > 0) {
+			message = message + " ...Missing " + missingEntitiesInQC
+                      + " entities in the .qc files";
+		}
+
+		if (missingEntitiesInFGD + missingEntitiesInQC == 0) {
+			message = "No missing entities found.  QC and FGD correlate!";
+		}
+		Log.a.WriteToLog(message);
 	}
 }

@@ -10,9 +10,11 @@ using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 using UnityEngine.UI;
 
-public static class QCFunctionParser {
+public class QCFunctionParser : MonoBehaviour {
 	public enum FunctionType {Function,Entity,Unknown};
-	private static string[] RemoveComment(IEnumerable<string> loc) {
+	private FunctionType[] funcTypeArray;
+
+	private string[] RemoveComment(IEnumerable<string> loc) {
 		string[] line = loc.ToArray();
 		bool startComment = false;
 		int startComPos=0;
@@ -23,14 +25,24 @@ public static class QCFunctionParser {
 		int multiCommentStart, multiCommentEnd;
 		for(int i=0;i<count;i++) {
 			if (string.IsNullOrWhiteSpace(line[i])) continue;
-			// if (line[i].Contains("[ENTITY]")) functionTaggedAsEntity[i] = IsAnEntity;
-			// else if (line[i].Contains("[FUNCTION]")) functionTaggedAsEntity[i] = IsAFunction;
-			// else functionTaggedAsEntity[i] = IsUnknown;
+			if (line[i].Contains("[ENTITY]")) {
+				funcTypeArray[i] = FunctionType.Entity;
+			} else if (line[i].Contains("[FUNCTION]")) {
+				funcTypeArray[i] = FunctionType.Function;
+			} else {
+				funcTypeArray[i] = FunctionType.Unknown;
+			}
+
+			if (line[i].Contains("dcrossbow_checkmelee")) {
+				Debug.Log("line[" + i.ToString() + "] funcType: " + funcTypeArray[i].ToString() + ":: " + line[i]);
+			}
 
 			if (line[i].Contains("//")) {
 				mistakeComment = false;
 				if(line[i].Contains("*//*")) { //Case mistake /**//**/ with //
-					if ((line[i].IndexOf("//") - line[i].IndexOf("*//*")) == 1) mistakeComment = true;
+					if ((line[i].IndexOf("//") - line[i].IndexOf("*//*")) == 1) {
+						mistakeComment = true;
+					}
 				}
 
 				if(!mistakeComment) {
@@ -57,25 +69,33 @@ public static class QCFunctionParser {
 						comment = line[i].Substring(startComPos);
 						line[i] = line[i].Replace(comment, string.Empty);
 					} else {
-						comment = line[i].Substring(startComPos, endComPos - startComPos + 2);
+						comment = line[i].Substring(startComPos,
+								    endComPos - startComPos + 2);
 						line[i] = line[i].Replace(comment, string.Empty);
 					}
 				}
 			}
 
 			if (line[i].Contains("/*"))
-			while((multiCommentStart = line[i].IndexOf("/*")) >= 0 && (multiCommentEnd = line[i].IndexOf("*/")) >= 0 && multiCommentEnd > multiCommentStart) {
-				comment = line[i].Substring(multiCommentStart, multiCommentEnd - multiCommentStart + 2);
+			while((multiCommentStart = line[i].IndexOf("/*")) >= 0
+				  && (multiCommentEnd = line[i].IndexOf("*/")) >= 0
+                  && multiCommentEnd > multiCommentStart) {
+				comment = line[i].Substring(multiCommentStart,
+						    multiCommentEnd - multiCommentStart + 2);
 				line[i] = line[i].Replace(comment, string.Empty);
 			}
 		}
 		return line;
 	}
 
-	public static List<QCFunction_struct> ParseQCFunctions(string path) {
+	public List<QCFunction_struct> ParseQCFunctions(string path) {
 		List<QCFunction_struct> lstCppFunc = new List<QCFunction_struct>();
 
-		IEnumerable<string> listOfFunctions = File.ReadLines(path, System.Text.Encoding.ASCII);
+		IEnumerable<string> listOfFunctions = new string[] {};
+		foreach (string ln in File.ReadLines(path,System.Text.Encoding.ASCII)) {
+			listOfFunctions = listOfFunctions.Concat(new[] { ln });
+		}
+		funcTypeArray = new FunctionType[listOfFunctions.Count()];
 		string[] listOfFunctionsNoComments = RemoveComment(listOfFunctions);
 		int level = 0;
 		QCFunction_struct crtFunc = new QCFunction_struct();
@@ -85,12 +105,19 @@ public static class QCFunctionParser {
 		string builderToString;
 		string lastLine = "";
 		for (int i=0;i<listOfFunctionsNoComments.Length;i++) {
+			//Debug.Log("funcTypeArray[2047]: " + funcTypeArray[2047].ToString());
 			lineCount++; // start at 1 and increment thereafter
-			if (string.IsNullOrWhiteSpace(listOfFunctionsNoComments[i])) { lastLine = listOfFunctionsNoComments[i]; continue; }
+			if (string.IsNullOrWhiteSpace(listOfFunctionsNoComments[i])) {
+				lastLine = listOfFunctionsNoComments[i];
+				continue;
+			}
 
+			if (i < funcTypeArray.Length) crtFunc.functionType=funcTypeArray[i];
 			if (level <= 0) {
 				if (listOfFunctionsNoComments[i].Contains('(')) {
-					if (listOfFunctionsNoComments[i].Trim().IndexOf('(') == 0) builder.Append(lastLine);
+					if (listOfFunctionsNoComments[i].Trim().IndexOf('(') == 0) {
+						builder.Append(lastLine);
+					}
 					builder.AppendLine(listOfFunctionsNoComments[i]);
 					crtFunc.startLine = lineCount;
 					crtFunc.fullPath = path;
@@ -99,7 +126,10 @@ public static class QCFunctionParser {
 				}
 				if (startName) {
 					builderToString = builder.ToString();
-					if (listOfFunctionsNoComments[i] != builderToString.Replace("\r\n",string.Empty)) builder.AppendLine(listOfFunctionsNoComments[i]);
+					if (listOfFunctionsNoComments[i] != 
+						builderToString.Replace("\r\n",string.Empty)) {
+						builder.AppendLine(listOfFunctionsNoComments[i]);
+					}
 					if (listOfFunctionsNoComments[i].Contains(')')) {
 						startName = false;
 						crtFunc.functionName = builder.ToString();
