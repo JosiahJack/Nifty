@@ -247,7 +247,7 @@ public class Nifty : MonoBehaviour {
 		for (i = 0; i < qcentRef.entityReferences.Count; i++) {
 			bool foundMatch = false;
 			for (j = 0; j < fgdentRef.entityReferences.Count; j++) {
-				if (fgdentRef.entityReferences[i] == qcentRef.entityReferences[j]) {
+				if (fgdentRef.entityReferences[j] == qcentRef.entityReferences[i]) {
 					foundMatch = true;
 				}
 			}
