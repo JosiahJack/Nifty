@@ -25,6 +25,12 @@ public class QCEntityDump : MonoBehaviour {
 		string s, args;
 		long count;
 		string voidstring = "void";
+		string mainstring = "main";
+		string worldstring = "worldspawn";
+		string brackleft = "[";
+		string brackright = "]";
+		string caps = "[A-Z]"; // No capitalized letters (I hope)...
+		string excArmor = "item_armorInv"; // Always exceptions aren't there :(.
 		char[] textChars;
 		int index = 0;
 		int argind = 0;
@@ -39,72 +45,89 @@ public class QCEntityDump : MonoBehaviour {
 			for (int j=0;j<count;j++) {
 				s = lst[j].functionName;
 				if (s == null) continue;
-				if (s.Contains("dcrossbow_checkmelee")) Debug.Log("dcrossbow_checkmelee: " + (lst[j].functionType).ToString());
-				if (lst[j].functionType == 
-					QCFunctionParser.FunctionType.Function) continue;
+				if (lst[j].functionType == QCFunctionParser.FunctionType.Function) {
+					continue;
+				}
+				if (Regex.IsMatch(s,caps) && !s.Contains(excArmor)) continue;
+				if (!s.Contains(voidstring)) continue;
+				if (s.Contains(mainstring)) continue;
+				if (s.Contains(worldstring)) continue;
+				if (s.Contains(brackleft) || s.Contains(brackright)) continue;
 
-				if (s.Contains(voidstring) && (!Regex.IsMatch(s,"[A-Z]")
-					|| s.Contains("item_armorInv")
-					|| lst[j].functionType == 
-					     QCFunctionParser.FunctionType.Entity)
-					&& !s.Contains("main")
-					&& !s.Contains("worldspawn")) {
-					if (!s.Contains("[") && !s.Contains("]")) {
-						textChars = s.ToCharArray();
-						index = argind = 0;
-						for (int k=0;k<textChars.Length;k++) {
-							if (textChars[k] == ')') {
-								index = k;
-								foundparenth = true;
-								break;
-							}
-						}
-						if (foundparenth && index > 0) {
-							for (int k=0;k<textChars.Length;k++) {
-								if (textChars[k] == '(') {
-									argind = k;
-									break;
-								}
-							}
-							args = s;
-							if (argind > 0) args = args.Remove(0,argind);
-							textChars = args.ToCharArray();
-							for (int k=0;k<textChars.Length;k++) {
-								if (textChars[k] == ')') {
-									argind = k;
-									break;
-								}
-							}
-							s = s.Remove(0,index+1);
-						}
-						if (argind > 1) continue;
-
-						index = 0;
-						textChars = s.ToCharArray();
-						for (int k=0;k<textChars.Length;k++) {
-							if (textChars[k] == '=') {
-								index = k;
-								foundparenth = true;
-								break;
-							}
-						}
-						if (foundparenth && index > 0 && index < s.Length) {
-							s = s.Remove(index,(s.Length - index));
-						}
-
-						s = s.Trim();
-						if ((s.Contains("_use") || s.Contains("think")
-							|| s.Contains("touch") || s.Contains("ai_")
-							|| s.Contains("th_") || s.Contains("SUB_")
-							|| s.Contains("BDW_")
-							|| s.Contains("checkattack"))
-							&& (lst[j].functionType != 
-							QCFunctionParser.FunctionType.Entity)) continue;
-						
-						entityReferences.Add(s);
-						foundents++;
+				textChars = s.ToCharArray();
+				index = argind = 0;
+				for (int k=0;k<textChars.Length;k++) {
+					if (textChars[k] == ')') {
+						index = k;
+						foundparenth = true;
+						break;
 					}
 				}
+				if (foundparenth && index > 0) {
+					for (int k=0;k<textChars.Length;k++) {
+						if (textChars[k] == '(') {
+							argind = k;
+							break;
+						}
+					}
+					args = s;
+					if (argind > 0) args = args.Remove(0,argind);
+					textChars = args.ToCharArray();
+					for (int k=0;k<textChars.Length;k++) {
+						if (textChars[k] == ')') {
+							argind = k;
+							break;
+						}
+					}
+					s = s.Remove(0,index+1);
+				}
+				if (argind > 1) continue;
+
+				index = 0;
+				textChars = s.ToCharArray();
+				for (int k=0;k<textChars.Length;k++) {
+					if (textChars[k] == '=') {
+						index = k;
+						foundparenth = true;
+						break;
+					}
+				}
+				if (foundparenth && index > 0 && index < s.Length) {
+					s = s.Remove(index,(s.Length - index));
+				}
+
+				s = s.Trim();
+				if ((s.Contains("_use") || s.Contains("think")
+					|| s.Contains("touch") || s.Contains("ai_")
+					|| s.Contains("th_") || s.Contains("SUB_")
+					|| s.Contains("BDW_")
+					|| s.Contains("checkattack")
+					|| s.Contains("die")
+					|| s.Contains("run1")
+					|| s.Contains("walk1")
+					|| s.Contains("idle1")
+					|| s.Contains("melee1")
+					|| s.Contains("attack1")
+					|| s.Contains("missile1")
+					|| s.Contains("_setup")
+					|| s.Contains("_awake")
+					|| s.Contains("_blocked")
+					|| s.Contains("create_attachment")
+					|| s.Contains("update_attachment")
+					|| s.Contains("walkframe")
+					|| s.Contains("runframe")
+					|| s.Contains("idleframe")
+					|| s.Contains("spawntether")
+					|| s.Contains("minionsetup")
+					|| s.Contains("precache"))
+					&& (lst[j].functionType != 
+					QCFunctionParser.FunctionType.Entity)) continue;
+				if (s.Length < 3) continue;				
+
+				if (!entityReferences.Contains(s)) {
+					entityReferences.Add(s);
+				}
+				foundents++;
 			}
 		}
 	}

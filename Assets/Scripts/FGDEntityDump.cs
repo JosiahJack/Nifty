@@ -30,7 +30,7 @@ public class FGDEntityDump : MonoBehaviour {
 				if (readline.Length < 4) continue;
 				if (readline[0] == '/' && readline[1] == '/') continue;
 				if (!readline.Contains("=")) continue;
-				if (!readline.Contains("[")) continue;
+				//if (!readline.Contains("[")) continue;
 
 				trimdexEqualSign = readline.IndexOf("=");
 				if (trimdexEqualSign < 0) continue;
@@ -44,9 +44,13 @@ public class FGDEntityDump : MonoBehaviour {
 				trimdex = 0;
 				// Find trimming index for rightmost non-whitespace 
 				// or [ character.
+				Match match;
 				for (int i=0;i<s2.Length;i++) {
-					Match match = Regex.Match(s2[i].ToString(),
-											  "^[a-z_][a-z0-9_]*$");
+					if (i == 0) {
+						match = Regex.Match(s2[i].ToString(),"[a-z]");
+					} else {
+						match = Regex.Match(s2[i].ToString(),"[a-z_0-9]");
+					}
 					trimdex = i;
 					if (!match.Success) {
 						lastGoodCharIndex = i-1;

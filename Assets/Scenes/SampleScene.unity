@@ -3484,6 +3484,7 @@ GameObject:
   - component: {fileID: 912844910}
   - component: {fileID: 912844914}
   - component: {fileID: 912844916}
+  - component: {fileID: 912844918}
   m_Layer: 0
   m_Name: Nifty
   m_TagString: Untagged
@@ -3542,6 +3543,7 @@ MonoBehaviour:
   tinputOutputFilename: {fileID: 386536494}
   tinputFGDPath: {fileID: 76267819}
   tinputLogPath: {fileID: 225513674}
+  qcFuncParserRef: {fileID: 0}
   onLinux: 0
   onWindows: 0
   onMac: 0
@@ -3599,6 +3601,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe07ba5990bc58946b8d62b65550fdb9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  functionReferences: []
+  entityReferences: []
   useTags: {fileID: 2015821695}
 --- !u!114 &912844914
 MonoBehaviour:
@@ -3660,6 +3664,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 337a12cfeef49c64ea2b7e9ca5c7cfa2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  entityReferences: []
+--- !u!114 &912844918
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 912844906}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43c727e9583664dbfbbb64aeb060e4a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &931635127

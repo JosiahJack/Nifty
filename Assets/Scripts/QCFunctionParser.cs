@@ -14,27 +14,32 @@ public class QCFunctionParser : MonoBehaviour {
 	public enum FunctionType {Function,Entity,Unknown};
 	private FunctionType[] funcTypeArray;
 
-	private string[] RemoveComment(IEnumerable<string> loc) {
-		string[] line = loc.ToArray();
+	private string[] RemoveComment(string[] line) {
 		bool startComment = false;
 		int startComPos=0;
 		int endComPos=-1;
-		int count = line.Length;
 		string comment;
 		bool mistakeComment;
 		int multiCommentStart, multiCommentEnd;
-		for(int i=0;i<count;i++) {
+		for(int i=0; i<line.Length; i++) {
 			if (string.IsNullOrWhiteSpace(line[i])) continue;
 			if (line[i].Contains("[ENTITY]")) {
 				funcTypeArray[i] = FunctionType.Entity;
 			} else if (line[i].Contains("[FUNCTION]")) {
 				funcTypeArray[i] = FunctionType.Function;
-			} else {
-				funcTypeArray[i] = FunctionType.Unknown;
+				line[i] = "";
+				continue;
 			}
 
-			if (line[i].Contains("dcrossbow_checkmelee")) {
-				Debug.Log("line[" + i.ToString() + "] funcType: " + funcTypeArray[i].ToString() + ":: " + line[i]);
+			if (line[i].Contains("Redirect") || line[i].Contains("Re-direct")
+			   || line[i].Contains("redirect")) {
+				line[i] = "";
+				continue;
+			}
+
+			if (line[i].Contains("Legacy") || line[i].Contains("legacty")) {
+				line[i] = "";
+				continue;
 			}
 
 			if (line[i].Contains("//")) {
@@ -90,12 +95,13 @@ public class QCFunctionParser : MonoBehaviour {
 
 	public List<QCFunction_struct> ParseQCFunctions(string path) {
 		List<QCFunction_struct> lstCppFunc = new List<QCFunction_struct>();
-
-		IEnumerable<string> listOfFunctions = new string[] {};
-		foreach (string ln in File.ReadLines(path,System.Text.Encoding.ASCII)) {
-			listOfFunctions = listOfFunctions.Concat(new[] { ln });
+		string[] listOfFunctions = File.ReadLines(path,
+								     System.Text.Encoding.ASCII).ToArray();
+		funcTypeArray = new FunctionType[listOfFunctions.Length];
+		for (int k=0;k<funcTypeArray.Length;k++) {
+			funcTypeArray[k] = FunctionType.Unknown;
 		}
-		funcTypeArray = new FunctionType[listOfFunctions.Count()];
+
 		string[] listOfFunctionsNoComments = RemoveComment(listOfFunctions);
 		int level = 0;
 		QCFunction_struct crtFunc = new QCFunction_struct();
@@ -105,14 +111,13 @@ public class QCFunctionParser : MonoBehaviour {
 		string builderToString;
 		string lastLine = "";
 		for (int i=0;i<listOfFunctionsNoComments.Length;i++) {
-			//Debug.Log("funcTypeArray[2047]: " + funcTypeArray[2047].ToString());
-			lineCount++; // start at 1 and increment thereafter
+			lineCount++; // Start at 1 and increment thereafter
 			if (string.IsNullOrWhiteSpace(listOfFunctionsNoComments[i])) {
 				lastLine = listOfFunctionsNoComments[i];
 				continue;
 			}
 
-			if (i < funcTypeArray.Length) crtFunc.functionType=funcTypeArray[i];
+			crtFunc.functionType = funcTypeArray[i];
 			if (level <= 0) {
 				if (listOfFunctionsNoComments[i].Contains('(')) {
 					if (listOfFunctionsNoComments[i].Trim().IndexOf('(') == 0) {

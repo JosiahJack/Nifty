@@ -244,10 +244,14 @@ public class Nifty : MonoBehaviour {
 	private void CompareFGDToQcEntities() {
 		int i, j, missingEntitiesInQC, missingEntitiesInFGD;
 		missingEntitiesInQC = missingEntitiesInFGD = 0;
+		bool[] qcCheckedAlready = new bool[qcentRef.entityReferences.Count];
+		for (i = 0; i < qcCheckedAlready.Length; i++ ) qcCheckedAlready[i] = false;
 		for (i = 0; i < qcentRef.entityReferences.Count; i++) {
 			bool foundMatch = false;
 			for (j = 0; j < fgdentRef.entityReferences.Count; j++) {
 				if (fgdentRef.entityReferences[j] == qcentRef.entityReferences[i]) {
+					//Debug.Log("Found match fgd: " + fgdentRef.entityReferences[j]);
+					qcCheckedAlready[i] = true;
 					foundMatch = true;
 				}
 			}
@@ -258,20 +262,22 @@ public class Nifty : MonoBehaviour {
 			}
 		}
 
-		for (i = 0; i < fgdentRef.entityReferences.Count; i++) {
-			bool foundMatch = false;
-			for (j = 0; j < qcentRef.entityReferences.Count; j++) {
-				if (fgdentRef.entityReferences[i] == qcentRef.entityReferences[j]) {
-					foundMatch = true;
-				}
-			}
-			if (!foundMatch) {
-				Log.a.WriteToLog("Could not find fgd entity `" 
-								 + qcentRef.entityReferences[i]
-                                 + "` in qc files");
-				missingEntitiesInQC++;
-			}
-		}
+		//for (i = 0; i < fgdentRef.entityReferences.Count; i++) {
+		//	bool foundMatch = false;
+		//	for (j = 0; j < qcentRef.entityReferences.Count; j++) {
+		//		if (qcCheckedAlready[j]) continue;
+
+		//		if (fgdentRef.entityReferences[i] == qcentRef.entityReferences[j]) {
+		//			foundMatch = true;
+		//		}
+		//	}
+		//	if (!foundMatch) {
+		//		Log.a.WriteToLog("Could not find fgd entity `" 
+		//						 + qcentRef.entityReferences[i]
+        //                         + "` in qc files");
+		//		missingEntitiesInQC++;
+		//	}
+		//}
 		string message = "Comparison results: ";
 		if (missingEntitiesInFGD > 0) {
 			message = message + " ...Missing " + missingEntitiesInFGD
