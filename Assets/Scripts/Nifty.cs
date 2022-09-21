@@ -36,6 +36,7 @@ public class Nifty : MonoBehaviour {
 	public static Nifty a;
 
 	void Start() {
+		Application.targetFrameRate = 144; // Prevent coil whine on GPU's.
 		a = this;
 		a.qcentRef = GetComponent<QCEntityDump>();
 		a.qcrefRef = GetComponent<QCReferenceCheck>();
@@ -194,6 +195,14 @@ public class Nifty : MonoBehaviour {
 		} else {
 			Log.a.WriteToLog("Error! QC folder path not specified.");
 		}
+	}
+
+	public void ButtonQuit() {
+		#if UNITY_EDITOR_WIN
+			UnityEditor.EditorApplication.isPlaying = false;
+		#endif
+
+		Application.Quit();
 	}
 
 	void WriteLastUserSettingsToFile() {

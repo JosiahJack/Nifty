@@ -7,36 +7,41 @@ using System;
 
 public class Log : MonoBehaviour {
 	public Transform output1ContentContainer;
-    public GameObject logUILine;
-	private bool startedLogging;
+	public Toggle overwriteToggle;
+	public Text[] logText;
 
 	public static Log a;
 
 	void Start() {
 		a = this;
-		a.startedLogging = false;
 	}
 
 	public void WriteToLog(string line) {
-        bool append = false;
-        if (startedLogging) append = true;
+		if (line == null) return;
+
+        bool append = !overwriteToggle.isOn;
 
 		//#if DEBUG
 	        Debug.Log(line);
 		//#endif
-
-        if (logUILine == null) {
-            GameObject lineUI = (GameObject) Instantiate(logUILine, Vector3.zero, 
-                                 Quaternion.identity, output1ContentContainer);
-            Text t = lineUI.GetComponent<Text>();
-            t.text = line;
-        }
-
+		Console.WriteLine(line);
+		logText[0].text = logText[1].text;
+		logText[1].text = logText[2].text;
+		logText[2].text = logText[3].text;
+		logText[3].text = logText[4].text;
+		logText[4].text = logText[5].text;
+		logText[5].text = logText[6].text;
+		logText[6].text = logText[7].text;
+		logText[7].text = logText[8].text;
+		logText[8].text = logText[9].text;
+		logText[9].text = logText[10].text;
+		logText[10].text = logText[11].text;
+		logText[11].text = logText[12].text;
+		logText[12].text = line;
 		StreamWriter sw = new StreamWriter(Nifty.a.logFilePath, append,
                                            Encoding.ASCII);
 		if (sw == null) return;
 
-		startedLogging = true;
 		using (sw) {
 			sw.Write(line);
 			sw.Write(Environment.NewLine);
