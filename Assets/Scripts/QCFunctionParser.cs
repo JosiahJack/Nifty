@@ -14,12 +14,12 @@ public class QCFunctionParser : MonoBehaviour {
 	public enum FunctionType {Function,Entity,Unknown};
 	private FunctionType[] funcTypeArray;
 
-	private string[] RemoveComment(string[] line) {
+	private string[] RemoveComment(string[] line, bool getRedirects, bool getLegacy) {
 		bool startComment = false;
 		int startComPos=0;
 		int endComPos=-1;
 		string comment;
-		bool mistakeComment;
+		bool mistakeComment = false;
 		int multiCommentStart, multiCommentEnd;
 		for(int i=0; i<line.Length; i++) {
 			if (string.IsNullOrWhiteSpace(line[i])) continue;
@@ -31,15 +31,22 @@ public class QCFunctionParser : MonoBehaviour {
 				continue;
 			}
 
-			if (line[i].Contains("Redirect") || line[i].Contains("Re-direct")
-			   || line[i].Contains("redirect")) {
-				line[i] = "";
-				continue;
+			bool containsRedirect = (line[i].Contains("Redirect")
+									 || line[i].Contains("Re-direct")
+			        				 || line[i].Contains("redirect")
+									 || line[i].Contains("re-direct"));
+			if (getRedirects) {
+				if (!containsRedirect) { line[i] = ""; continue; }
+			} else {
+				if (containsRedirect) { line[i] = ""; continue; }
 			}
 
-			if (line[i].Contains("Legacy") || line[i].Contains("legacty")) {
-				line[i] = "";
-				continue;
+			bool containsLegacy = (line[i].Contains("Legacy")
+								   || line[i].Contains("legacy"));
+			if (getLegacy) {
+				if (!containsLegacy) { line[i] = ""; continue; }
+			} else {
+				if (containsLegacy) { line[i] = ""; continue; }
 			}
 
 			if (line[i].Contains("//")) {
@@ -93,7 +100,7 @@ public class QCFunctionParser : MonoBehaviour {
 		return line;
 	}
 
-	public List<QCFunction_struct> ParseQCFunctions(string path) {
+	public List<QCFunction_struct> ParseQCFunctions(string path, bool getRedirects, bool getLegacy) {
 		List<QCFunction_struct> lstCppFunc = new List<QCFunction_struct>();
 		string[] listOfFunctions = File.ReadLines(path,
 								     System.Text.Encoding.ASCII).ToArray();
@@ -102,7 +109,7 @@ public class QCFunctionParser : MonoBehaviour {
 			funcTypeArray[k] = FunctionType.Unknown;
 		}
 
-		string[] listOfFunctionsNoComments = RemoveComment(listOfFunctions);
+		string[] listOfFunctionsNoComments = RemoveComment(listOfFunctions,getRedirects,getLegacy);
 		int level = 0;
 		QCFunction_struct crtFunc = new QCFunction_struct();
 		int lineCount = 0;

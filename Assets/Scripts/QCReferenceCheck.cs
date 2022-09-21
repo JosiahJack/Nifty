@@ -10,14 +10,10 @@ using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 
 public class QCReferenceCheck : MonoBehaviour {
-	private string[] modelIDFiles;
-	private string[] spriteIDFiles;
-	private string[] waveIDFiles;
 	private List<string> modelReferencesInQc;
 	private List<string> spriteReferencesInQc;
 	private List<string> waveReferencesInQc;
 	private StreamReader dataReader;
-	private string id1FolderPath;
 	private string readLine;
 	private int currentLine;
 	private string errMsg;
@@ -44,43 +40,6 @@ public class QCReferenceCheck : MonoBehaviour {
 		Log.a.WriteToLog("Checking references to models, sprites, and "
 						 + "sounds in .qc files...");
 		FileData.a.PopulateFileNames();
-		string lastFolder = Path.GetDirectoryName(Nifty.a.modFolderPath);
-		id1FolderPath = Path.GetDirectoryName(lastFolder) + "/id1/";
-		if (id1FolderPath == null) {
-			errMsg = "ERROR: Could not find id1.  "
-					 + "Ensure mod folder is a neighbor with id1.";
-			Log.a.WriteToLog(errMsg);
-			return;
-		}
-		modelIDFiles = Directory.GetFiles(id1FolderPath + "progs/","*.mdl",
-						 System.IO.SearchOption.AllDirectories);
-		// Strip from "/home/qmaster/QUAKE/id1/progs/model.mdl"
-		// down to "progs/model.mdl"
-		for (int i=0;i<modelIDFiles.Length;i++) {
-			modelIDFiles[i] = modelIDFiles[i].Remove(0,id1FolderPath.Length);
-			modelIDFiles[i] = modelIDFiles[i].Replace("\\","/");
-		}
-
-		spriteIDFiles = Directory.GetFiles(id1FolderPath + "progs/","*.spr",
-						  System.IO.SearchOption.AllDirectories);
-		// Strip from "/home/qmaster/QUAKE/id1/progs/sprite.spr"
-		// down to "progs/sprite.spr"
-		for (int i=0;i<spriteIDFiles.Length;i++) {
-			spriteIDFiles[i] = spriteIDFiles[i].Remove(0,id1FolderPath.Length);
-			spriteIDFiles[i] = spriteIDFiles[i].Replace("\\","/");
-		}
-
-		waveIDFiles = Directory.GetFiles(id1FolderPath + "sound/","*.wav",
-					    System.IO.SearchOption.AllDirectories);
-		// Strip from "/home/qmaster/QUAKE/id1/sound/folder/something.wav"
-		// down to "folder/something.wav"
-		// These are the odd one out as 'sound/' also needs removed.
-		for (int i=0;i<waveIDFiles.Length;i++) {
-			waveIDFiles[i] = waveIDFiles[i].Remove(0,id1FolderPath.Length);
-			waveIDFiles[i] = waveIDFiles[i].Remove(0,6); // Remove 'sound/'.
-			waveIDFiles[i] = waveIDFiles[i].Replace("\\","/");
-		}
-
 		modelReferencesInQc = new List<string>();
 		spriteReferencesInQc = new List<string>();
 		waveReferencesInQc = new List<string>();
@@ -135,8 +94,8 @@ public class QCReferenceCheck : MonoBehaviour {
 				}
 			}
 			if (!foundref) {
-				for(int j=0;j<modelIDFiles.Length;j++) {
-					if (modelIDFiles[j] == modelReferencesInQc[i]) {
+				for(int j=0;j<FileData.a.modelIDFiles.Length;j++) {
+					if (FileData.a.modelIDFiles[j] == modelReferencesInQc[i]) {
 						foundref = true;
 					}
 				}
@@ -156,8 +115,8 @@ public class QCReferenceCheck : MonoBehaviour {
 				}
 			}
 			if (!foundref) {
-				for(int j=0;j<spriteIDFiles.Length;j++) {
-					if (spriteIDFiles[j] == spriteReferencesInQc[i]) {
+				for(int j=0;j<FileData.a.spriteIDFiles.Length;j++) {
+					if (FileData.a.spriteIDFiles[j] == spriteReferencesInQc[i]) {
 						foundref = true;
 					}
 				}
@@ -177,8 +136,8 @@ public class QCReferenceCheck : MonoBehaviour {
 				}
 			}
 			if (!foundref) {
-				for(int j=0;j<waveIDFiles.Length;j++) {
-					if (waveIDFiles[j] == waveReferencesInQc[i]) {
+				for(int j=0;j<FileData.a.waveIDFiles.Length;j++) {
+					if (FileData.a.waveIDFiles[j] == waveReferencesInQc[i]) {
 						foundref = true;
 					}
 				}

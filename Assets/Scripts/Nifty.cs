@@ -132,7 +132,10 @@ public class Nifty : MonoBehaviour {
 
 	public void ButtonModFileCheck() {
 		if (!string.IsNullOrWhiteSpace(modFolderPath)) {
-			Log.a.WriteToLog("Error! Function does not exist yet.");
+			FileData.a.PopulateFileNames();
+			FileData.a.ReportCapsInFileNames();
+			BSPParser.a.CheckBSPs();
+			Log.a.WriteToLog("Mod file check complete!");
 		} else {
 			Log.a.WriteToLog("Error! Mod folder path not specified.");
 		}
@@ -188,7 +191,6 @@ public class Nifty : MonoBehaviour {
 			fgdentRef.FGDFindEntitiesForList();
 			qcentRef.QCFindEntitiesForList();
 			CompareFGDToQcEntities();
-			Log.a.WriteToLog("Done.  Comparison complete.");
 		} else {
 			Log.a.WriteToLog("Error! QC folder path not specified.");
 		}
@@ -244,14 +246,10 @@ public class Nifty : MonoBehaviour {
 	private void CompareFGDToQcEntities() {
 		int i, j, missingEntitiesInQC, missingEntitiesInFGD;
 		missingEntitiesInQC = missingEntitiesInFGD = 0;
-		bool[] qcCheckedAlready = new bool[qcentRef.entityReferences.Count];
-		for (i = 0; i < qcCheckedAlready.Length; i++ ) qcCheckedAlready[i] = false;
 		for (i = 0; i < qcentRef.entityReferences.Count; i++) {
 			bool foundMatch = false;
 			for (j = 0; j < fgdentRef.entityReferences.Count; j++) {
 				if (fgdentRef.entityReferences[j] == qcentRef.entityReferences[i]) {
-					//Debug.Log("Found match fgd: " + fgdentRef.entityReferences[j]);
-					qcCheckedAlready[i] = true;
 					foundMatch = true;
 				}
 			}
@@ -262,22 +260,30 @@ public class Nifty : MonoBehaviour {
 			}
 		}
 
-		//for (i = 0; i < fgdentRef.entityReferences.Count; i++) {
-		//	bool foundMatch = false;
-		//	for (j = 0; j < qcentRef.entityReferences.Count; j++) {
-		//		if (qcCheckedAlready[j]) continue;
-
-		//		if (fgdentRef.entityReferences[i] == qcentRef.entityReferences[j]) {
-		//			foundMatch = true;
-		//		}
-		//	}
-		//	if (!foundMatch) {
-		//		Log.a.WriteToLog("Could not find fgd entity `" 
-		//						 + qcentRef.entityReferences[i]
-        //                         + "` in qc files");
-		//		missingEntitiesInQC++;
-		//	}
-		//}
+		for (i = 0; i < fgdentRef.entityReferences.Count; i++) {
+			bool foundMatch = false;
+			for (j = 0; j < qcentRef.entityReferences.Count; j++) {
+				if (fgdentRef.entityReferences[i] == qcentRef.entityReferences[j]) {
+					foundMatch = true;
+				}
+			}
+			for (j = 0; j < qcentRef.entityReferencesRedirects.Count; j++) {
+				if (fgdentRef.entityReferences[i] == qcentRef.entityReferencesRedirects[j]) {
+					foundMatch = true;
+				}
+			}
+			for (j = 0; j < qcentRef.entityReferencesLegacy.Count; j++) {
+				if (fgdentRef.entityReferences[i] == qcentRef.entityReferencesLegacy[j]) {
+					foundMatch = true;
+				}
+			}
+			if (!foundMatch) {
+				Log.a.WriteToLog("Could not find fgd entity `" 
+								+ fgdentRef.entityReferences[i]
+								+ "` in qc files");
+				missingEntitiesInQC++;
+			}
+		}
 		string message = "Comparison results: ";
 		if (missingEntitiesInFGD > 0) {
 			message = message + " ...Missing " + missingEntitiesInFGD

@@ -21,7 +21,10 @@ public class Log : MonoBehaviour {
         bool append = false;
         if (startedLogging) append = true;
 
-        Debug.Log(line);
+		//#if DEBUG
+	        Debug.Log(line);
+		//#endif
+
         if (logUILine == null) {
             GameObject lineUI = (GameObject) Instantiate(logUILine, Vector3.zero, 
                                  Quaternion.identity, output1ContentContainer);

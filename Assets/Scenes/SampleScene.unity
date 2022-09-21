@@ -3485,6 +3485,7 @@ GameObject:
   - component: {fileID: 912844914}
   - component: {fileID: 912844916}
   - component: {fileID: 912844918}
+  - component: {fileID: 912844919}
   m_Layer: 0
   m_Name: Nifty
   m_TagString: Untagged
@@ -3603,6 +3604,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   functionReferences: []
   entityReferences: []
+  entityReferencesRedirects: []
+  entityReferencesLegacy: []
   useTags: {fileID: 2015821695}
 --- !u!114 &912844914
 MonoBehaviour:
@@ -3639,6 +3642,7 @@ MonoBehaviour:
   sprMapEditorNames: []
   wavFileNames: []
   wavMapEditorNames: []
+  bspFileNames: []
 --- !u!114 &912844916
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3677,6 +3681,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 43c727e9583664dbfbbb64aeb060e4a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &912844919
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 912844906}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3cd4ce8e644d8c4768a24ff2f7c187b9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &931635127

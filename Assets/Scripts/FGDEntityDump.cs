@@ -30,7 +30,7 @@ public class FGDEntityDump : MonoBehaviour {
 				if (readline.Length < 4) continue;
 				if (readline[0] == '/' && readline[1] == '/') continue;
 				if (!readline.Contains("=")) continue;
-				//if (!readline.Contains("[")) continue;
+				if (!readline.Contains("[")) continue;
 
 				trimdexEqualSign = readline.IndexOf("=");
 				if (trimdexEqualSign < 0) continue;
@@ -67,12 +67,26 @@ public class FGDEntityDump : MonoBehaviour {
 					s3 = s2.Remove(trimdex,s2.Length - trimdex);
 				}
 
-				if (readline.Length > 1 && s3 != "worldspawn") {
-					entityReferences.Add(s3);
-				}
+				if (AbleToIgnore(s3,readline)) continue;
+
+				entityReferences.Add(s3);
             } while (!dataReader.EndOfStream);
             dataReader.Close();
         }
+	}
+
+	private bool AbleToIgnore(string s, string readline) {
+		if (readline.Length <= 1) return true;
+
+
+		if (s.Contains("worldspawn")) return true;
+		if (readline.Contains("def=")) return true;
+		if (readline.Contains("def =")) return true;
+		if (s.Contains("func_detail")) return true; // Catches _wall, etc.
+		if (s.Contains("func_group")) return true;
+		if (s.Contains("misc_external_map")) return true;
+		if (s.Contains("func_illusionary_visblocker")) return true;
+		return false;
 	}
 	
     public void FGDEntityDumpAction()  {
