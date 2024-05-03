@@ -91,6 +91,7 @@ public class FileData : MonoBehaviour {
         List<string> skyNamesStripped = new List<string>();
         for (int i=0;i<skyNamesAll.Length;i++) {
             skyNamesAll[i] = skyNamesAll[i].Replace("\\","/");
+
             // Make sure that there are 6 characters to remove, direction plus
             // the file extension, e.g. up.tga or dn.tga
             string s = skyNamesAll[i];
@@ -98,7 +99,6 @@ public class FileData : MonoBehaviour {
             s = s.Remove(0,Nifty.a.modFolderPath.Length + 8);
             if (!String.IsNullOrWhiteSpace(s) && !skyNamesStripped.Contains(s)) {
                 skyNamesStripped.Add(s);
-                //Debug.Log("sky added: " + s);
             }
         }
         skyNames = skyNamesStripped.ToArray();
@@ -106,7 +106,7 @@ public class FileData : MonoBehaviour {
 
 
 		string lastFolder = Path.GetDirectoryName(Nifty.a.modFolderPath);
-		id1FolderPath = "/home/qmaster/QUAKE/id1/";//Path.GetDirectoryName(lastFolder) + "/id1/";
+		id1FolderPath = "/home/qmaster/QUAKE/id1/";
 		if (id1FolderPath == null) {
 			string errMsg = "ERROR: Could not find id1.  "
 					       + "Ensure mod folder is a neighbor with id1.";
@@ -116,6 +116,7 @@ public class FileData : MonoBehaviour {
 
 		modelIDFiles = Directory.GetFiles(id1FolderPath + "progs/","*.mdl",
 						 System.IO.SearchOption.AllDirectories);
+
 		// Strip from "/home/qmaster/QUAKE/id1/progs/model.mdl"
 		// down to "progs/model.mdl"
 		for (int i=0;i<modelIDFiles.Length;i++) {
@@ -125,6 +126,7 @@ public class FileData : MonoBehaviour {
 
 		spriteIDFiles = Directory.GetFiles(id1FolderPath + "progs/","*.spr",
 						  System.IO.SearchOption.AllDirectories);
+
 		// Strip from "/home/qmaster/QUAKE/id1/progs/sprite.spr"
 		// down to "progs/sprite.spr"
 		for (int i=0;i<spriteIDFiles.Length;i++) {
@@ -134,6 +136,7 @@ public class FileData : MonoBehaviour {
 
 		waveIDFiles = Directory.GetFiles(id1FolderPath + "sound/","*.wav",
 					    System.IO.SearchOption.AllDirectories);
+
 		// Strip from "/home/qmaster/QUAKE/id1/sound/folder/something.wav"
 		// down to "folder/something.wav"
 		// These are the odd one out as 'sound/' also needs removed.

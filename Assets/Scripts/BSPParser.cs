@@ -3,6 +3,7 @@ using System.Text;
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Globalization;
 using System;
 using System.Linq;
@@ -11,7 +12,7 @@ using System.Diagnostics;
 
 public class BSPParser : MonoBehaviour {
     private string utilPath = "/StreamingAssets/bsputil";
-
+	public static CultureInfo en_US_Culture = new CultureInfo("en-US");
     public static BSPParser a;
 
     void Awake() {
@@ -77,12 +78,45 @@ public class BSPParser : MonoBehaviour {
             string[] entries = lines[i].Split('"');
             if (entries.Length > 2) {
                 if (entries[1] == "target") targets.Add(entries[3]);
+                else if (entries[1] == "target2") targets.Add(entries[3]);
+                else if (entries[1] == "target3") targets.Add(entries[3]);
+                else if (entries[1] == "target4") targets.Add(entries[3]);
+                else if (entries[1] == "targetback") targets.Add(entries[3]);
+                else if (entries[1] == "killtarget") targets.Add(entries[3]);
+                else if (entries[1] == "killtarget2") targets.Add(entries[3]);
+                else if (entries[1] == "deathtarget") targets.Add(entries[3]);
+                else if (entries[1] == "angletarget") targets.Add(entries[3]);
+                else if (entries[1] == "angrytarget") targets.Add(entries[3]);
+                else if (entries[1] == "sighttarget") targets.Add(entries[3]);
+                else if (entries[1] == "turrettarget") targets.Add(entries[3]);
+                else if (entries[1] == "turretclosing") targets.Add(entries[3]);
+                else if (entries[1] == "turretopening") targets.Add(entries[3]);
+                else if (entries[1] == "event") targets.Add(entries[3]);
+                else if (entries[1] == "event2") targets.Add(entries[3]);
+                else if (entries[1] == "message" && !entries[3].Contains(" ") && !entries[3].Contains(".")) targets.Add(entries[3]);
+                else if (entries[1] == "message2" && !entries[3].Contains(" ") && !entries[3].Contains(".")) targets.Add(entries[3]);
+                else if (entries[1] == "noise1" && !entries[3].Contains(" ") && !entries[3].Contains(".")) targets.Add(entries[3]);
+                else if (entries[1] == "noise2" && !entries[3].Contains(" ") && !entries[3].Contains(".")) targets.Add(entries[3]);
+                else if (entries[1] == "noise3" && !entries[3].Contains(" ") && !entries[3].Contains(".")) targets.Add(entries[3]);
+                else if (entries[1] == "noise4" && !entries[3].Contains(" ") && !entries[3].Contains(".")) targets.Add(entries[3]);
+
                 else if (entries[1] == "targetname") targetnames.Add(entries[3]);
                 else if (entries[1] == "sky") skyname = entries[3];
 
                 if (lines.Contains(".wav")) soundNames.Add(entries[3]);
+                if (lines.Contains(".mp3")) soundNames.Add(entries[3]);
+                if (lines.Contains(".ogg")) soundNames.Add(entries[3]);
                 if (lines.Contains(".mdl")) modelNames.Add(entries[3]);
                 if (lines.Contains(".spr")) spriteNames.Add(entries[3]);
+                if (lines.Contains("sounds")) {
+                    int val = GetIntFromString(entries[3]);
+                    if (val >= 0) {
+                        string trackname = "track" + entries[3];
+                        spriteNames.Add(trackname + ".mp3");
+                        spriteNames.Add(trackname + ".ogg");
+                        spriteNames.Add(trackname + ".wav");
+                    }
+                }
             }
         }
 
@@ -186,4 +220,14 @@ public class BSPParser : MonoBehaviour {
                                             + " issues found");
         if (entFileGenerated) File.Delete(entFile);
     }
+
+	public int GetIntFromString(string val) {
+		if (val == "0") return 0;
+
+        int getValreadInt = -1;
+		bool getValparsed = Int32.TryParse(val, NumberStyles.Integer, en_US_Culture,
+                                      out getValreadInt);
+		if (!getValparsed) return -1;
+		return getValreadInt;
+	}
 }

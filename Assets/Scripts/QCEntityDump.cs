@@ -74,7 +74,7 @@ public class QCEntityDump : MonoBehaviour {
 				continue;
 			}
 			if (Regex.IsMatch(s,caps) && !s.Contains(excArmor)) continue;
-			if (!s.Contains(voidstring)) continue;
+			if (!s.Contains(voidstring)) continue; // must be void()
 			if (s.Contains(mainstring)) continue;
 			if (s.Contains(worldstring)) continue;
 			if (s.Contains(brackleft) || s.Contains(brackright)) continue;

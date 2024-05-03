@@ -4169,7 +4169,10 @@ MonoBehaviour:
   tinputOutputFilename: {fileID: 386536494}
   tinputFGDPath: {fileID: 76267819}
   tinputLogPath: {fileID: 225513674}
+  qcentRef: {fileID: 0}
   qcFuncParserRef: {fileID: 0}
+  qcrefRef: {fileID: 0}
+  fgdentRef: {fileID: 0}
   onLinux: 0
   onWindows: 0
   onMac: 0
@@ -7595,6 +7598,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1734468652}
   m_CullTransparentMesh: 0
+--- !u!1 &1745161552
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1745161554}
+  - component: {fileID: 1745161553}
+  m_Layer: 0
+  m_Name: TestRunner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1745161553
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1745161552}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ad1206e29b2352b8b04a07dc2cc00e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  buttonLabel: Run Tests
+--- !u!4 &1745161554
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1745161552}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 193.23433, y: -38.14522, z: -483.51367}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1769510402
 GameObject:
   m_ObjectHideFlags: 0

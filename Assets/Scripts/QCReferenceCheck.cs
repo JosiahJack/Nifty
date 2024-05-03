@@ -82,6 +82,7 @@ public class QCReferenceCheck : MonoBehaviour {
 		Log.a.WriteToLog("Models references found (.mdl): " + mdlrefTotal.ToString()
 						 + ", Sprites references found (.spr): " + sprrefTotal.ToString()
 						 + ", Sounds references found (.wav): " + wavrefTotal.ToString());
+
 		int badmdl = 0;
 		int badspr = 0;
 		int badwav = 0;

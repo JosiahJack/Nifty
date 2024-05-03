@@ -11,27 +11,38 @@ public class ImportMDL : MonoBehaviour {
 	private Vector2[] uvmap;
 
 	void Start () {
-		if (Const.a == null) Debug.Log("ERROR: Could not access instance 'a' of Const");
 		internalColormap = Const.a.colormap;
 	}
 
 	public mdl_header_t ImportMDLFromFile (string fileNameAndPath) {
 		mdl_header_t mdlHeader = new mdl_header_t();
 
-		using (BinaryReader b = new BinaryReader(File.Open((fileNameAndPath),FileMode.Open))) {
+		using (BinaryReader b = new BinaryReader(File.Open((fileNameAndPath),
+														   FileMode.Open))) {
 			mdlmesh = new Mesh();
 
 			// 1. Read Header
 			mdlHeader.ident = b.ReadInt32(); // Get the magic number
 			if (mdlHeader.ident != 1330660425) {
-				Debug.Log("ERROR: Could not import mdl: " + fileNameAndPath + ", bad ident number was" + mdlHeader.ident.ToString() +",(not IDPO(1330660425))");
+				Log.a.WriteToLog("ERROR: Could not import mdl: "
+								 + fileNameAndPath
+								 + ", bad ident number was"
+								 + mdlHeader.ident.ToString()
+								 + ",(not IDPO(1330660425))");
+
 				return mdlHeader;
 			}
+
 			mdlHeader.version = b.ReadInt32();
 			if (mdlHeader.version != 6) {
-				Debug.Log("ERROR: Could not import mdl: " + fileNameAndPath + ", bad version number was" + mdlHeader.version.ToString() +",(not 6)");
+				Log.a.WriteToLog("ERROR: Could not import mdl: "
+								 + fileNameAndPath
+								 + ", bad version number was"
+								 + mdlHeader.version.ToString() +",(not 6)");
+
 				return mdlHeader;
 			}
+
 			mdlHeader.scale.x = b.ReadSingle();
 			mdlHeader.scale.y = b.ReadSingle();
 			mdlHeader.scale.z = b.ReadSingle();

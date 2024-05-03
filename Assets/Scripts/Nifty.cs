@@ -21,10 +21,10 @@ public class Nifty : MonoBehaviour {
 	public InputField tinputOutputFilename;
 	public InputField tinputFGDPath;
 	public InputField tinputLogPath;
-	private QCEntityDump qcentRef;
+	public QCEntityDump qcentRef;
 	public QCFunctionParser qcFuncParserRef;
-	private QCReferenceCheck qcrefRef;
-	private FGDEntityDump fgdentRef;
+	public QCReferenceCheck qcrefRef;
+	public FGDEntityDump fgdentRef;
 	private OutputAllMiscModels outputmodelsRef;
 	private DocQC docQC;
 	private string lastFgdFilePath;
